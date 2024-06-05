@@ -113,13 +113,18 @@ def get_points_around_track(track_loc,data):
                     {"lons": track_loc_lon, "lats": track_loc_lat, "ID": 1}
                 )
     
+    # drop nans so can deal with shorter tracks
+    ship_loc_df.dropna(inplace=True)
+    
     # 2. get buffer around track
     buf_right, buf_left, points = get_buffer(ship_loc_df)
 
     # 3. get the lon/lat of the data field that are within the buffer
     try:
+        # this is for model data grids
         lon, lat = np.meshgrid(data.grid_longitude.values, data.grid_latitude.values)
     except:
+        # this is for observation data grids
         lon, lat = data.Longitude.values, data.Latitude.values
     right_polygon = shapely.vectorized.contains(buf_right.item(), lon, lat)
     left_polygon = shapely.vectorized.contains(buf_left.item(), lon, lat)
