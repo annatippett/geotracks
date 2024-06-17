@@ -121,8 +121,10 @@ def get_points_around_track(track_loc,data):
 
     # 3. get the lon/lat of the data field that are within the buffer
     try:
-        # this is for model data grids
-        lon, lat = np.meshgrid(data.grid_longitude.values, data.grid_latitude.values)
+        # this is for model data grids (not always called grid_longitude, grid_latitude, sometimes have _0 at end)
+        lat_name=[i for i in list(data.dims) if("latitude" in i)][0]
+        lon_name=[i for i in list(data.dims) if("longitude" in i)][0]
+        lon, lat = np.meshgrid(data[lon_name].values, data[lat_name].values)
     except:
         # this is for observation data grids
         lon, lat = data.Longitude.values, data.Latitude.values
