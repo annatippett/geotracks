@@ -131,8 +131,14 @@ def get_points_around_track(track_loc, data):
         lon_name = [i for i in list(data.dims) if ("longitude" in i)][0]
         lon, lat = np.meshgrid(data[lon_name].values, data[lat_name].values)
     except:
-        # this is for observation data grids
-        lon, lat = data.Longitude.values, data.Latitude.values
+        lon_array_shape = data.Longitude.shape
+        if len(lon_array_shape) == 1:
+            # this is for model data grids with 1D lon/lat arrays
+            lon, lat = np.meshgrid(data.Longitude.values, data.Latitude.values)
+        elif len(lon_array_shape) == 2:
+            # this is for MODIS observation data grids
+            lon, lat = data.Longitude.values, data.Latitude.values
+
     right_polygon = shapely.vectorized.contains(buf_right.item(), lon, lat)
     left_polygon = shapely.vectorized.contains(buf_left.item(), lon, lat)
 
