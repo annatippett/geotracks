@@ -17,7 +17,6 @@ def get_interpolated_coords(track_loc):
 
     interpolation_factor = 10
     coords = np.array(list(zip(track_loc.lon.values, track_loc.lat.values)))
-
     # Calculate the number of segments
     num_segments = len(coords) - 1
 
@@ -122,7 +121,6 @@ def get_points_around_track(track_loc, data):
 
     # drop nans so can deal with shorter tracks
     ship_loc_df.dropna(inplace=True)
-
     # 2. get buffer around track
     buf_right, buf_left, points = get_buffer(ship_loc_df)
 
