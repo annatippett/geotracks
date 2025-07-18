@@ -15,3 +15,16 @@ classifiers = [
     "License :: OSI Approved :: BSD License",
     "Operating System :: OS Independent",
 ]
+requires-python = ">=3.8"
+
+dependencies = [
+    "numpy",
+    "pandas",
+    "geopandas",
+    "shapely",
+    "scikit-learn",
+    "rasterio",
+    "affine",
+    "xarray",  # optional, if your data inputs use xarray
+    "joblib",  # optional, for future parallelization
+]
