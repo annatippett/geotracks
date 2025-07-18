@@ -53,7 +53,7 @@ def get_buffer(ship_loc_df):
     # leave in degree coordinate system, so that longitudes are not wrapped around
     # lines = lines.to_crs("3857")
 
-    # # Get left / right buffer (1 degree either side)
+    # # Get left / raght buffer (1 degree either side)
     buf_right = lines.buffer(distance=1, single_sided=True)
     buf_left = lines.buffer(distance=-1, single_sided=True)
 
@@ -72,6 +72,7 @@ def buffer_data(polygon, lon, lat, data):
 
     poly_data = np.where(polygon, data, np.nan)
     poly_data = poly_data[np.isfinite(poly_data)]
+    # replace (-9999) negative values with NaN again
     poly_data = np.where(poly_data < 0, np.nan, poly_data)
 
     return poly_lon, poly_lat, poly_data
@@ -97,6 +98,7 @@ def buf_data(points, lon, lat, data):
 
     distances, indices = tree.query(matching_points, k=1)
     # print(len(lon), len(lat), len(distances[:, 0]), len(indices[:, 0]))
+    # IF THIS FAILS WITH "must be same length", check that there are no nans in the data field because these get removed - should fill with -9999 before passing to this function
     output = pd.DataFrame(
         {
             "lon": lon,
@@ -133,12 +135,25 @@ def get_points_around_track(track_loc, data):
     except:
         lon_array_shape = data.Longitude.shape
         if len(lon_array_shape) == 1:
-            # this is for model data grids with 1D lon/lat arrays
+            # this is for data grids with 1D lon/lat arrays
             lon, lat = np.meshgrid(data.Longitude.values, data.Latitude.values)
+            # lat = lat[::-1]
         elif len(lon_array_shape) == 2:
             # this is for MODIS observation data grids
             lon, lat = data.Longitude.values, data.Latitude.values
 
+    # if there are no points in the track, return empty dataframe
+    if len(buf_right) == 0 or len(buf_left) == 0:
+        return pd.DataFrame(
+            columns=[
+                "lon",
+                "lat",
+                "track_index",
+                "distance_from_track",
+                "data",
+                "time_along_track",
+            ]
+        )
     right_polygon = shapely.vectorized.contains(buf_right.item(), lon, lat)
     left_polygon = shapely.vectorized.contains(buf_left.item(), lon, lat)
 
@@ -147,11 +162,11 @@ def get_points_around_track(track_loc, data):
     left_lon, left_lat, left_data = buffer_data(left_polygon, lon, lat, data)
 
     # 5. get the distance from the track / time along track / data for these points and output dataframe
-    if len(left_lon) != 0:
+    if len(left_data) != 0:
         left_output = buf_data(points, left_lon, left_lat, left_data)
         left_output["distance_from_track"] *= -1
 
-    if len(right_lon) != 0:
+    if len(right_data) != 0:
         right_output = buf_data(points, right_lon, right_lat, right_data)
 
     # 6. combine outputs and calculate time along track
