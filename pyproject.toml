@@ -25,6 +25,6 @@ dependencies = [
     "scikit-learn",
     "rasterio",
     "affine",
-    "xarray",  # optional, if your data inputs use xarray
-    "joblib",  # optional, for future parallelization
+    "xarray",  
+    "joblib", 
 ]
