@@ -13,7 +13,15 @@ warnings.filterwarnings("ignore")
 
 class BufferBase:
     def __init__(self, track_data):
-        self.track_data = pd.DataFrame(track_data, columns=["lon", "lat", "height"])
+        if isinstance(track_data, pd.DataFrame):
+            self.track_data = track_data.rename_axis(["lon", "lat", "height"])
+        elif isinstance(track_data, np.ndarray) and track_data.ndim == 2:
+            self.track_data = pd.DataFrame(track_data, columns=["lon", "lat", "height"])
+        else:
+            raise ValueError(
+                "track_data must be a 2D array or a DataFrame with lon, lat, height."
+            )
+
         self.interpolated_coords = self._interpolate_coords()
         self.ship_df = pd.DataFrame(
             {
@@ -88,7 +96,9 @@ class BufferBase:
         )
 
     def _getlonlat(self, data):
-        raise NotImplementedError("This method should be implemented in subclasses.")
+        raise NotImplementedError(
+            "This method should be implemented in subclasses. Different data formats may require different handling of longitude and latitude extraction."
+        )
 
     def extract(self, data):
         lon, lat = self._getlonlat(data)
@@ -141,16 +151,22 @@ class ModelDataBuffer(BufferBase):
         lat_name = [dim for dim in data.dims if "latitude" in dim][0]
         lon_name = [dim for dim in data.dims if "longitude" in dim][0]
         lon, lat = np.meshgrid(data[lon_name].values, data[lat_name].values)
+        if lon.shape != lat.shape:
+            raise ValueError("Longitude and Latitude arrays must have the same shape.")
         return lon, lat
 
 
 class MODISDataBuffer(BufferBase):
     def _getlonlat(self, data):
         lon, lat = data.Longitude.values, data.Latitude.values
+        if lon.shape != lat.shape:
+            raise ValueError("Longitude and Latitude arrays must have the same shape.")
         return lon, lat
 
 
 class SEVIRIDataBuffer(BufferBase):
     def _getlonlat(self, data):
         lon, lat = np.meshgrid(data.Longitude.values, data.Latitude.values)
+        if lon.shape != lat.shape:
+            raise ValueError("Longitude and Latitude arrays must have the same shape.")
         return lon, lat
