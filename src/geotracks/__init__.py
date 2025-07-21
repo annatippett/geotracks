@@ -1,4 +1,4 @@
-from .buffer import BufferBase, ModelDataBuffer, MODISDataBuffer, SEVIRIDataBuffer
+from .buffer_oop import BufferBase, ModelDataBuffer, MODISDataBuffer, SEVIRIDataBuffer
 
 __all__ = [
     "BufferBase",
