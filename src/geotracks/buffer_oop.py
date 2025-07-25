@@ -12,7 +12,7 @@ warnings.filterwarnings("ignore")
 
 
 class BufferBase:
-    def __init__(self, track_data):
+    def __init__(self, track_data, factor=10):
         if isinstance(track_data, pd.DataFrame):
             self.track_data = track_data.rename_axis(["lon", "lat", "height"])
         elif isinstance(track_data, np.ndarray) and track_data.ndim == 2:
@@ -22,7 +22,8 @@ class BufferBase:
                 "track_data must be a 2D array or a DataFrame with lon, lat, height."
             )
 
-        self.interpolated_coords = self._interpolate_coords()
+        self.interpolated_coords = self._interpolate_coords(factor=factor)
+        self.factor = factor
         self.ship_df = pd.DataFrame(
             {
                 "lons": self.interpolated_coords[:, 0],
@@ -142,7 +143,9 @@ class BufferBase:
             )
 
         df = pd.concat(dfs)
-        df["time_along_track"] = df.track_index / 60
+        df["time_along_track"] = df.track_index / (
+            (len(df.track_index.unique()) + self.factor) / (len(self.track_data) / 6)
+        )
         return df
 
 
